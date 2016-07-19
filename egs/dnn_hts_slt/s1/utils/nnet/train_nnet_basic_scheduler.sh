@@ -79,7 +79,7 @@ for iter in $(seq -w $max_iters); do
   echo -n "TRAIN ACCURACY $(printf "%.4f" $tr_acc) LRATE $(printf "%.6g" $learn_rate), "
   
   #cross-validation
-  $TRAIN_TOOL --cross-validate=true \
+  $TRAIN_TOOL --cross-validate=true --randomizer-size=$cache_size \
    ${feature_transform:+ --feature-transform=$feature_transform} \
    ${use_gpu_id:+ --use-gpu-id=$use_gpu_id} \
    $mlp_next "$infeats_cv" "$feats_fl" \
