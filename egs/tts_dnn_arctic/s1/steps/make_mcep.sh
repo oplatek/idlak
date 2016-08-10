@@ -89,7 +89,7 @@ else
     in_feats="scp,p:$logdir/wav_${name}.JOB.scp"
 fi
 
-mcep_feats="ark,s,cs:compute-mcep-feats.sh --frame_length $frame_length --srate $sample_frequency $in_feats ark:- |"
+mcep_feats="ark,s,cs:compute-mcep-feats.sh --config $mcep_config --frame_length $frame_length --srate $sample_frequency $in_feats ark:- |"
 
 
 $cmd JOB=1:$nj $logdir/make_mcep.JOB.log \
