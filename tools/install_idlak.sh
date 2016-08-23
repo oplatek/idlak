@@ -18,7 +18,7 @@ echo "****(1) Installing expat"
 
 (
   rm -f expat-2.1.0.tar.gz 2>/dev/null
-  wget -T 10 -t 3 http://downloads.sourceforge.net/project/expat/expat/2.1.0/expat-2.1.0.tar.gz
+  wget -T 10 -t 3 https://downloads.sourceforge.net/project/expat/expat/2.1.0/expat-2.1.0.tar.gz
   if [ ! -e expat-2.1.0.tar.gz ]; then
     echo "****download of expat-2.1.0.tar.gz failed."
     exit 1
@@ -76,7 +76,7 @@ echo "****(3) Installing pcre with utf8 support"
 
 (
   rm -f pcre-8.20.tar.bz2 2>/dev/null
-  wget -T 10 -t 3 http://sourceforge.net/projects/pcre/files/pcre/8.20/pcre-8.20.tar.bz2
+  wget -T 10 -t 3 https://sourceforge.net/projects/pcre/files/pcre/8.20/pcre-8.20.tar.bz2
   if [ ! -e pcre-8.20.tar.bz2 ]; then
     echo "****download of pcre-8.20.tar.bz2 failed."
     exit 1
