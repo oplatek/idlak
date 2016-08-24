@@ -121,10 +121,10 @@ done
 for step in train dev; do
     rm -f data/$step/feats.scp
     # Generate f0 features
-    steps/make_pitch.sh --pitch-config conf/pitch-48k.conf  data/$step    exp/make_pitch/$step   $featdir;
+    steps/make_pitch.sh --pitch-config conf/pitch-48k.conf  data/$step    exp/make_pitch/$step   $featdir || exit 1;
     cp data/$step/pitch_feats.scp data/$step/feats.scp
     # Compute CMVN on pitch features, to estimate min_f0 (set as mean_f0 - 2*std_F0)
-    steps/compute_cmvn_stats.sh data/$step    exp/compute_cmvn_pitch/$step   $featdir;
+    steps/compute_cmvn_stats.sh data/$step    exp/compute_cmvn_pitch/$step   $featdir || exit 1;
     # For bndap / mcep extraction to be successful, the frame-length must be adjusted
     # in relation to the minimum pitch frequency.
     # We therefore do something speaker specific using the mean / std deviation from
@@ -141,11 +141,11 @@ for step in train dev; do
 	    subset_data_dir.sh --spk $spk data/$step 100000 data/${step}_$spk
 	    #cp data/$step/pitch_feats.scp data/${step}_$spk/
 	    # Regenerate pitch with more appropriate window
-	    steps/make_pitch.sh --pitch-config conf/pitch-48k.conf --frame_length $f0flen    data/${step}_$spk exp/make_pitch/${step}_$spk  $featdir;
+	    steps/make_pitch.sh --pitch-config conf/pitch-48k.conf --frame_length $f0flen    data/${step}_$spk exp/make_pitch/${step}_$spk  $featdir || exit 1;
 	    # Generate Band Aperiodicity feature
-	    steps/make_bndap.sh --bndap-config conf/bndap-48k.conf --frame_length $bndapflen data/${step}_$spk exp/make_bndap/${step}_$spk  $featdir
+	    steps/make_bndap.sh --bndap-config conf/bndap-48k.conf --frame_length $bndapflen data/${step}_$spk exp/make_bndap/${step}_$spk  $featdir || exit 1;
 	    # Generate Mel Cepstral features
-	    steps/make_mcep.sh  --sample-frequency $srate --frame_length $mcepflen  data/${step}_$spk exp/make_mcep/${step}_$spk   $featdir	
+	    steps/make_mcep.sh  --mcep-config conf/mcep-48k.conf --frame_length $mcepflen  data/${step}_$spk exp/make_mcep/${step}_$spk   $featdir   || exit 1;
     done
     # Merge features
     cat data/${step}_*/bndap_feats.scp > data/$step/bndap_feats.scp
@@ -153,7 +153,7 @@ for step in train dev; do
     # Have to set the length tolerance to 1, as mcep files are a bit longer than the others for some reason
     paste-feats --length-tolerance=1 scp:data/$step/pitch_feats.scp scp:data/$step/mcep_feats.scp scp:data/$step/bndap_feats.scp ark,scp:$featdir/${step}_cmp_feats.ark,data/$step/feats.scp
     # Compute CMVN on whole feature set
-    steps/compute_cmvn_stats.sh data/$step exp/compute_cmvn/$step   data/$step
+    steps/compute_cmvn_stats.sh data/$step exp/compute_cmvn/$step   data/$step || exit 1;
 done
 
 #cat data/{train,dev}/feats.scp | awk '{ if (w[$1]){} else {w[$1] = 1; print}}' > data/full/feats.scp
@@ -168,7 +168,7 @@ tpdb=$KALDI_ROOT/idlak-data/en/ga/
 dict=data/local/dict
 for step in train dev full; do
     # Normalise text and generate phoneme information
-    idlaktxp --pretty --tpdb=$tpdb data/$step/text.xml data/$step/text_norm.xml
+    idlaktxp --pretty --tpdb=$tpdb data/$step/text.xml data/$step/text_norm.xml || exit 1;
     # Generate full labels
     #idlakcex --pretty --cex-arch=default --tpdb=$tpdb data/$step/text_norm.xml data/$step/text_full.xml
 done
@@ -195,28 +195,28 @@ train=data/full
 #test=data/eval_mfcc
 
 steps/train_mono.sh  --nj 1 --cmd "$train_cmd" \
-  $train $lang $expa/mono
+  $train $lang $expa/mono || exit 1;
 steps/align_si.sh  --nj 1 --cmd "$train_cmd" \
 $train $lang $expa/mono $expa/mono_ali
 steps/train_deltas.sh --cmd "$train_cmd" \
-     5000 50000 $train $lang $expa/mono_ali $expa/tri1
+     5000 50000 $train $lang $expa/mono_ali $expa/tri1 || exit 1;
 
 steps/align_si.sh  --nj 1 --cmd "$train_cmd" \
-$train data/lang $expa/tri1 $expa/tri1_ali
+$train data/lang $expa/tri1 $expa/tri1_ali || exit 1;
 steps/train_deltas.sh --cmd "$train_cmd" \
-     5000 50000 $train $lang $expa/tri1_ali $expa/tri2
+     5000 50000 $train $lang $expa/tri1_ali $expa/tri2 || exit 1;
 
 # Create alignments
 steps/align_si.sh  --nj 1 --cmd "$train_cmd" \
-    $train $lang $expa/tri2 $expa/tri2_ali_full
+    $train $lang $expa/tri2 $expa/tri2_ali_full || exit 1;
 
 steps/train_deltas.sh --cmd "$train_cmd" \
     --context-opts "--context-width=5 --central-position=2" \
-    5000 50000 $train $lang $expa/tri2_ali_full $expa/quin
+    5000 50000 $train $lang $expa/tri2_ali_full $expa/quin || exit 1;
 
 # Create alignments
 steps/align_si.sh  --nj 1 --cmd "$train_cmd" \
-    $train $lang $expa/quin $expa/quin_ali_full
+    $train $lang $expa/quin $expa/quin_ali_full || exit 1;
 
 
 
@@ -243,8 +243,8 @@ for step in full; do
     python $KALDI_ROOT/idlak-voice-build/utils/idlak_make_lang.py --mode 1 "2:0.03,3:0.2" "4" $ali/phones.txt $ali/wrdalign.dat data/$step/text_align.xml
 
     # Generate corresponding quinphone full labels
-    idlaktxp --pretty --tpdb=$tpdb data/$step/text_align.xml data/$step/text_anorm.xml
-    idlakcex --pretty --cex-arch=default --tpdb=$tpdb data/$step/text_anorm.xml data/$step/text_afull.xml
+    idlaktxp --pretty --tpdb=$tpdb data/$step/text_align.xml data/$step/text_anorm.xml || exit 1;
+    idlakcex --pretty --cex-arch=default --tpdb=$tpdb data/$step/text_anorm.xml data/$step/text_afull.xml || exit 1;
     python $KALDI_ROOT/idlak-voice-build/utils/idlak_make_lang.py --mode 2 data/$step/text_afull.xml data/$step/cex.ark > data/$step/cex_output_dump
     
     # Merge alignment with output from idlak cex front-end => gives you a nice vector
@@ -366,14 +366,14 @@ durdir=durdata
 lbldurdir=lbldurdata
 expdurdir=$exp/tts_dnn_dur_3_delta_quin5
 rm -rf $expdurdir
-$cuda_cmd $expdurdir/_train_nnet.log steps/train_nnet_basic.sh --delta_order 2 --config conf/3-layer-nn-splice5.conf --learn_rate 0.02 --momentum 0.1 --halving-factor 0.5 --min_iters 15 --max_iters 50 --randomize true --cache_size 50000 --bunch_size 200 --mlpOption " " --hid-dim 100 $lbldurdir/train $lbldurdir/dev $durdir/train $durdir/dev $expdurdir
+$cuda_cmd $expdurdir/_train_nnet.log steps/train_nnet_basic.sh --delta_order 2 --config conf/3-layer-nn-splice5.conf --learn_rate 0.02 --momentum 0.1 --halving-factor 0.5 --min_iters 15 --max_iters 50 --randomize true --cache_size 50000 --bunch_size 200 --mlpOption " " --hid-dim 100 $lbldurdir/train $lbldurdir/dev $durdir/train $durdir/dev $expdurdir || exit 1;
 
 # B. Larger DNN for acoustic features
 echo " ### Step 4b: acoustic model DNN ###"
 
 dnndir=$exp/tts_dnn_train_3_deltasc2_quin5
 rm -rf $dnndir
-$cuda_cmd $dnndir/_train_nnet.log steps/train_nnet_basic.sh --delta_order 2 --config conf/3-layer-nn-splice5.conf --learn_rate 0.04 --momentum 0.1 --halving-factor 0.5 --min_iters 15 --randomize true --cache_size 50000 --bunch_size 200 --mlpOption " " --hid-dim 700 $lbldir/train $lbldir/dev $acdir/train $acdir/dev $dnndir
+$cuda_cmd $dnndir/_train_nnet.log steps/train_nnet_basic.sh --delta_order 2 --config conf/3-layer-nn-splice5.conf --learn_rate 0.04 --momentum 0.1 --halving-factor 0.5 --min_iters 15 --randomize true --cache_size 50000 --bunch_size 200 --mlpOption " " --hid-dim 700 $lbldir/train $lbldir/dev $acdir/train $acdir/dev $dnndir || exit 1;
 
 ##############################
 ## 5. Synthesis
