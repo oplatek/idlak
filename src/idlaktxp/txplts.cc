@@ -88,10 +88,12 @@ int TxpLts::GetPron(const std::string &word, TxpLexiconLkp* lkp) {
           stress = ApplyTree(stress_tree, word.c_str(), pos);
           lkp->pron += std::string(phone, strlen(phone) - 1);
           lkp->pron += stress;
+	  free((void *)stress);
         } else {
           lkp->pron += phone;
         }
       }
+      free((void *)phone);
     } else {
       KALDI_WARN << "Letter not in LTS tree: " << ltr;
     }
@@ -137,7 +139,7 @@ static bool ApplyQuestion(const char* word, const int32 pos, const char* utfchar
 
 static const char* ApplyTree(const TxpLtsTree &tree,
                               const char* word,
-                              const int32 pos) {
+			     const int32 pos) {
   int32 currentnode = tree.root;
   TxpLtsNode node;
   while (1) {
@@ -153,7 +155,7 @@ static const char* ApplyTree(const TxpLtsTree &tree,
       }
     }
   }
-  return node.val.c_str();
+  return strdup(node.val.c_str());
 }
 
 }  // namespace kaldi

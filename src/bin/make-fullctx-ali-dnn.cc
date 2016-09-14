@@ -170,10 +170,15 @@ int main(int argc, char *argv[]) {
             /*std::cout << phone_index << " " << curphone[midcontext]  << "\n";*/
             
             // Recreate context structure, add state
+
             std::vector<int32> outphone;
-            // first item in context is the mid point phone - ignore it
-            for (k = 0; k < contexts[phone_index].size(); k++)
-                outphone.push_back(contexts[phone_index][k]);
+            if (phone_index < contexts.size()) {
+                for (k = 0; k < contexts[phone_index].size(); k++)
+                    outphone.push_back(contexts[phone_index][k]);
+            } else {
+                for (k = 0; k < contexts[contexts.size() - 1].size(); k++)
+                    outphone.push_back(contexts[contexts.size() - 1][k]); 
+            }
             outphone.push_back(states[j]);
             output.push_back(outphone);
 

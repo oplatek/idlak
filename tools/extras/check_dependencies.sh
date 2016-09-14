@@ -20,12 +20,19 @@ if ! echo "#include <zlib.h>" | gcc -E - >&/dev/null; then
   add_packages zlib-devel zlib1g-dev
 fi
 
-for f in make automake libtool autoconf patch awk grep bzip2 gzip wget git; do
+for f in sox csh make automake autoconf patch awk grep bzip2 gzip wget git cmake; do
   if ! which $f >&/dev/null; then
     echo "$0: $f is not installed."
     add_packages $f $f
   fi
 done
+
+if ! which libtoolize >&/dev/null; then
+  if ! which libtool >&/dev/null; then
+    echo "$0: libtool is not installed."
+    add_packages libtool libtool
+  fi
+fi
 
 if ! which svn >&/dev/null; then
   echo "$0: subversion is not installed"
@@ -37,6 +44,17 @@ if ! which awk >&/dev/null; then
   add_packages gawk gawk
 fi
 
+if ! which python >&/dev/null; then
+  echo "$0: python is not installed"
+  add_packages python python
+fi
+
+if which python >&/dev/null; then
+  if ! python -c "import numpy"; then
+    echo "$0: numpy is not installed"
+    add_packages python-numpy python-numpy
+  fi
+fi
 
 printed=false
 status=0
