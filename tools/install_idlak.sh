@@ -40,9 +40,9 @@ fi
 echo "****(2) Installing pugixml"
 
 (
-  rm -f pugixml-1.2.tar.gz 2>/dev/null
-  wget -T 10 -t 3 http://pugixml.googlecode.com/files/pugixml-1.2.tar.gz
-  #wget -T 10 -t 3 http://github.com/zeux/pugixml/releases/download/v1.7/pugixml-1.7.tar.gz
+  rm -rf pugixml-1.2 pugixml-1.2.tar.gz 2>/dev/null
+  #wget -T 10 -t 3 http://pugixml.googlecode.com/files/pugixml-1.2.tar.gz
+  wget -T 10 -t 3 https://github.com/zeux/pugixml/releases/download/v1.2/pugixml-1.2.tar.gz
   if [ ! -e pugixml-1.2.tar.gz ]; then
     echo "****download of pugixml-1.2.tar.gz failed."
     exit 1
@@ -59,6 +59,8 @@ echo "****(2) Installing pugixml"
         cmake -DCMAKE_CXX_FLAGS=-stdlib=libstdc++
       elif [ "$osx_ver" == "10.10" ]; then
         cmake -DCMAKE_CXX_FLAGS=-stdlib=libstdc++
+      else
+        cmake .
       fi
     else
       cmake . || exit 1
